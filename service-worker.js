@@ -11,16 +11,19 @@ self.addEventListener("activate", function(event) {
   console.log("activate");
 });
 
-self.addEventListener("fetch", function(event) {
-  console.log("The service worker is serving the asset.");
+// self.addEventListener("fetch", function(event) {
+//   console.log("The service worker is serving the asset.");
 
-  // intercept request
-  // make it wait
-  // event.waitUntil(post_intercept_promise);
-  // till a var is set
+//   // intercept request
+//   // make it wait
+//   // event.waitUntil(post_intercept_promise);
+//   // till a var is set
 
-  handle_fetch(event);
-});
+//   handle_fetch(event);
+//   console.log("TFetch EVENT END");
+// });
+
+
 
 const handle_fetch = async event => {
   console.log("Fetch event for ", event.request.url);
@@ -35,9 +38,7 @@ const handle_fetch = async event => {
     //     post_intercept_promise
     // );
 
-    console.log(
-        "POST EVENT"
-    );
+    console.log("POST EVENT");
 
     let result = await post_intercept_promise(); // wait till the promise resolves (*)
 
@@ -46,8 +47,39 @@ const handle_fetch = async event => {
 
     // handle POST
     console.log(req.clone());
+
+
+    event.respondWith(
+        (async function() {
+          return new Promise((resolve, reject) => {
+            const options = {
+              headers: {
+                "Content-Type": "application/json"
+              }
+            };
+            const jsonResponse = new Response(
+              JSON.stringify({
+                title: "foo-5",
+                body: "bar-5",
+                userId: 15,
+                id: 1015
+              }),
+              options
+            );
+  
+            resolve(jsonResponse);
+            // need to handle reject
+          });
+        })()
+      );
+
   }
+
+  console.log("TFetch EVENT END");
+
 };
+
+self.addEventListener("fetch",handle_fetch);
 
 var response_received = false;
 const set_response_received = value => {
@@ -59,56 +91,46 @@ const set_response_received = value => {
 // }
 
 const post_intercept_promise = () => {
+  console.log("post_intercept_promise calling");
 
-    console.log(
-        "post_intercept_promise calling"
-    );
+  return new Promise(function(resolve, reject) {
+    // do a thing, possibly async, then…
+    // if (response_received) {
+    //   resolve("Stuff worked!");
+    // }
+    // else {
+    //   reject(Error("It broke"));
+    // }
 
-    return new Promise(function(resolve, reject) {
-        // do a thing, possibly async, then…
-        // if (response_received) {
-        //   resolve("Stuff worked!");
-        // }
-        // else {
-        //   reject(Error("It broke"));
-        // }
-      
-        // inefficient polling
-        // while(true)
-        // {
-        //      if(response_received === true)
-        //      {
-        //          resolve("Stuff World");
-        //          break
-        //      }
-        // }
-      
-      console.log(
-          "new Promise(function(resolve, reject)"
-      );
-      
-        // poll to see if response_received flag is set
-        const poll = setInterval(polling, 10);
-      
-        function polling() {
-          if (response_received) {
-            clearInterval(poll);
-            resolve("GOT IT");
-          } else {
-              console.log(
-                  "Waiting FOr Resolve"
-              );
-          }
-        }
-      
-      })
-    //   .then(success => {
-    //     console.log("from_promise_then");
-    //     console.log(success);
-    //   })
-      ;
+    // inefficient polling
+    // while(true)
+    // {
+    //      if(response_received === true)
+    //      {
+    //          resolve("Stuff World");
+    //          break
+    //      }
+    // }
 
-} 
+    console.log("new Promise(function(resolve, reject)");
+
+    // poll to see if response_received flag is set
+    const poll = setInterval(polling, 10);
+
+    function polling() {
+      if (response_received) {
+        clearInterval(poll);
+        resolve("GOT IT");
+      } else {
+        console.log(`Waiting FOr Resolve => ${response_received}`);
+      }
+    }
+  });
+  //   .then(success => {
+  //     console.log("from_promise_then");
+  //     console.log(success);
+  //   })
+};
 
 //   post_intercept_promise.then(function(result) {
 //     console.log(result); // "Stuff worked!"
@@ -118,7 +140,7 @@ const post_intercept_promise = () => {
 
 // communicate with main js
 addEventListener("message", event => {
-//   console.log(`${post_intercept_promise}`);
+  //   console.log(`${post_intercept_promise}`);
 
   if (event.data == "RESOLVE") {
     // const fulfilled_promise =
