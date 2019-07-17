@@ -67,6 +67,13 @@ const handle_fetch = async event => {
               options
             );
   
+            post_intercept_promise()
+            .then(
+                (response) => {
+                    console.log(response);
+                    resolve(jsonResponse);
+                }
+            )
             resolve(jsonResponse);
             // need to handle reject
           });
